@@ -11,13 +11,10 @@ class PlayerController:
         
     def add_player(self, first_name, last_name, birth_date, chess_id, ranking=None, score=0):
         
-        while not self.validate_chess_id(chess_id):
-            print("Identifiant invalide !!! Format 2 lettres en majuscule suivis de 5 chiffres(ex:AB12345).")
-            chess_id = input("Identifiant national d’échecs: ")
         player = Player(first_name, last_name, birth_date, chess_id, ranking, score)
         self.players.append(player)
         self.save_players()
-        print('le nouveau joueur a été enregistré')
+        print(f"le nouveau joueur '{player.first_name}' a été enregistré")
     
     def validate_chess_id(self,chess_id):
     # This pattern checks for 2 uppercase letters followed by 5 digits
@@ -40,19 +37,27 @@ class PlayerController:
     def update_player(self, chess_id, first_name=None, last_name=None, birth_date=None):
         player = self.get_player(chess_id)
         if player:
+            if chess_id:                
+                player.chess_id = chess_id                  
             if first_name:
                 player.first_name = first_name
             if last_name:
                 player.last_name = last_name
             if birth_date:
                 player.birth_date = birth_date
-        self.save_players()
+            self.save_players()
+            print( 'Modifications des données joueur enregistrées')
+        else:
+            print( "L'identifiant fournie ne correspond pas !!!")
 
     def delete_player(self, chess_id):
         player = self.get_player(chess_id)
         if player:
             self.players.remove(player)
-        self.save_players()   
+            self.save_players()
+            print( 'Suppression joueur effectuée avec succcès')
+        else:
+            print( "L'identifiant fournie ne correspond pas !!!")   
     
             
     def load_players(self):

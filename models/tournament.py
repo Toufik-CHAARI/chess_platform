@@ -60,8 +60,8 @@ class Tournament:
                 {
                     'name': round.name,
                     'matches': [match.to_dict() for match in round.matches],
-                    'start_time': round.start_time,
-                    'end_time': round.end_time,
+                    'start_time': round.start_time.strftime('%d-%m-%Y %H:%M:%S') if round.start_time else None,
+                    'end_time': round.end_time.strftime('%d-%m-%Y %H:%M:%S') if round.end_time else None,
                 } for round in self.rounds],
             'players': [player.to_dict() for player in self.players],
             'num_rounds': self.num_rounds

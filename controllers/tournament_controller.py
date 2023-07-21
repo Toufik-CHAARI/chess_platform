@@ -66,9 +66,16 @@ class TournamentController:
     def start_round(self, tournament_id, round_name):
         tournament = self.get_tournament(tournament_id)
         if tournament:
+            if tournament.current_round >= tournament.num_rounds:
+                print("Impossible de créér un nouveau tour, vous avez atteint le maximum de tour pour ce tournoi.")
+            else:
+                tournament.add_round(round_name)
+                self.save_tournaments()
+                print("Nouveau Tour créé avec succès!")
+        '''if tournament:
             tournament.add_round(round_name)
             self.save_tournaments()
-            print("Round successfully created!")
+            print("Round successfully created!")'''
    
     def add_match_to_round(self,tournament_id,match_id, round_name, player_one, player_two,score1, score2):
         tournament = self.get_tournament(tournament_id)
@@ -85,13 +92,36 @@ class TournamentController:
             player_controller.rank_players()    
             self.save_tournaments()
             
+    
+    def update_match(self, tournament_id, match_id, player_one=None, player_two=None, score1=None, score2=None):
+        tournament = self.get_tournament(tournament_id)
+        if tournament:
+            # Find the match across all rounds
+            for round_ in tournament.rounds:
+                match = round_.get_match(match_id)
+                if match:
+                    match.player1 = player_one or match.player1
+                    match.player2 = player_two or match.player2
+                    if score1 is not None:
+                        match.score1 = score1
+                    if score2 is not None:
+                        match.score2 = score2
+
+                    self.save_tournaments()
+                    print("Match modifié avec succès!")
+                    return
+            print("cet identifiant ne correspond à aucun match!")
+        else:
+            print("Tournoi introuvable!")
+
+            
     def end_round(self, tournament_id):
         tournament = self.get_tournament(tournament_id)
         if tournament:
             current_round = tournament.rounds[tournament.current_round - 1]
-            current_round.end_time = "en_time"
+            current_round.end_time = datetime.now()
             self.save_tournaments()
-            print(f"Round {tournament.current_round} ended!")
+            print(f"Le Tour {tournament.current_round} est terminé!")
             
     
                
