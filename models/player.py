@@ -12,16 +12,7 @@ class Player:
         self.ranking = ranking
         self.score = score
 
-    #convert to a dictionnary
-    def to_dict(self):
-        return self.__dict__
-    
-    '''
     #convert to an object
-    @staticmethod
-    def from_dict(source):
-        return Player(**source)'''
-
     @staticmethod
     def from_dict(source):
         player = Player(

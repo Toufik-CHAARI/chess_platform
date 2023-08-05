@@ -10,11 +10,11 @@ class MainMenu:
     def __init__(self, player_controller, tournament_controller):
         self.player_controller = player_controller
         self.tournament_controller = tournament_controller
-    
+        
     
     def display(self):
         while True:
-            print("\nMain Menu:")
+            print("\n Menu Principal:")
             print("1. Gérer les joueurs")
             print("2. Gérer les tournois")
             print("3. Accéder aux rapports")
@@ -26,7 +26,7 @@ class MainMenu:
             elif choice == "2":
                 self.tournament_menu()
             elif choice == "3":
-                self.tournament_menu()           
+                self.report_menu()           
             elif choice == "4":
                 break
             else:
@@ -36,7 +36,7 @@ class MainMenu:
     def player_menu(self):    
         while True:
             print('------------------------------------') 
-            print("\nMenu:")
+            print("\nMenu Joueur:")
             print("1. Ajouter un joueur")
             print("2. Mettre à jour un joueur")
             print("3. Supprimer un joueur")
@@ -71,6 +71,7 @@ class MainMenu:
                 ranking = input("Ranking: ")
                 score = input("score: ")
                 self.player_controller.add_player(first_name, last_name, birth_date, chess_id)
+                break
             
             elif choice == "2":
                 chess_id = input("Identifiant national d’échecs: ")
@@ -92,10 +93,13 @@ class MainMenu:
                 ranking = input("Ranking: ")
                 score = input("score: ")
                 self.player_controller.update_player(chess_id, first_name, last_name, birth_date)
+                break
             
             elif choice == "3":
                 chess_id = input("Identifiant national d’échecs: ")
                 self.player_controller.delete_player(chess_id)
+                print('Le joueur a été supprimé')
+                break
             
             elif choice == "4":                
                 for player in self.player_controller.players:
@@ -123,11 +127,13 @@ class MainMenu:
             print("4. Supprimer un tournoi")
             print("5. Démarrez un tour dans un tournoi")
             print("6. Finir le tour en cours")
-            print("7. Ajouter un match au tour d'un tournoi")
-            print("8. Modifier le resultat d'un match")            
-            print("9. Revenir au menu principal")
+            print("7. Ajout manuel d'un match au tour d'un tournoi")
+            print("8. Generation automatique de match")  
+            print("9. Modifier / Enregistrer le resultat d'un match")          
+            print("10. Revenir au menu principal")
             choice = input("Choisissez une option: ")
 
+            
             if choice == "1":
                 tournament_id= input("Identifiant du tournois(généré automatiquement si vide): ")
                 name = input("Nom du tournoi: ")
@@ -166,6 +172,8 @@ class MainMenu:
                 else:
                     num_rounds = int(num_rounds)                
                 self.tournament_controller.create_tournament(tournament_id, name, location, start_date, end_date,description,num_rounds)
+                
+            
             elif choice == "2":
                 #for tournament in self.tournament_controller.tournaments:
                     #print(tournament.__dict__,end="\n")
@@ -186,7 +194,7 @@ class MainMenu:
                             print('------------------------------------')
                             print(f"Nom du Tour: {round.name}")
                             print('Date et heure de début :',round.start_time)
-                            print('Date et heure de début :',round.end_time)
+                            print('Date et heure de fin :',round.end_time )
                             print(f"Matches:")
                             for match in round.matches:
                                 print('Identifiant du match :',match.match_id)
@@ -201,10 +209,12 @@ class MainMenu:
             elif choice == "3":
                 tournament_id = input("Renseigner l'identifiant du tournoi pour modifier un tournoi: ")
                 self.tournament_controller.update_tournament(tournament_id)
+                
             
             elif choice == "4":
                 tournament_id = input("Renseigner l'identifiant du tournoi à supprimer: ")
-                self.tournament_controller.delete_tournament(tournament_id)            
+                self.tournament_controller.delete_tournament(tournament_id)
+                            
                  
             elif choice == "5":
                 #start round
@@ -212,17 +222,22 @@ class MainMenu:
                 while tournament_id == "" :
                     print("Vous devez imperativement fournir l'identifiant du tournoi")
                     tournament_id = input("Identifiant du tournoi: ")                    
-                round_name = input("Nom du Tour: ")
-                while round_name == "":
-                    print('Vous devez fournir un nom pour chaque tour')
-                    round_name = input("Nom du tour: ")
-                self.tournament_controller.start_round(tournament_id, round_name)
+                #round_name = input("Nom du Tour: ")
+                #while round_name == "":
+                   # print('Vous devez fournir un nom pour chaque tour')
+                    #round_name = input("Nom du tour: ")
+                self.tournament_controller.start_round(tournament_id)
+                
             
             elif choice == "6":
                 #end a round
                 tournament_id = input("Fournir l'identifiant du tournoi pour mettre fin au tour: ")
-                
+                while tournament_id == "":
+                    print("Vous devez impérativement fournir l'identifiant du Tournoi associé à ce tour")
+                    tournament_id = input("Fournir l'identifiant du tournoi pour mettre fin au tour: ")
                 self.tournament_controller.end_round(tournament_id)
+                
+                
             
             elif choice == "7":
                 #add match to round
@@ -243,21 +258,93 @@ class MainMenu:
                 while player_two =='':
                     print('Vous devez fournir un Identification National d échecs')
                     player_two = input("Identification National d échecs - Joueur 2 ")
-                score1 = int(input("Score - Joueur 1 : "))
-                score2 = int(input("Score - Joueur 2: "))
-                
+                score1 = float(input("Score - Joueur 1 : "))                
+                while self.player_controller.valid_score(score1) != True :
+                    print("Erreur de saisie !!! - les résultats d'un match sont 1 = gagné,0= perdu et 0.5 ")
+                    score1 = float(input("Score - Joueur 1 : "))                    
+                score2 = float(input("Score - Joueur 2: "))
+                while self.player_controller.valid_score(score2) != True :
+                    print("Erreur de saisie !!! - les résultats d'un match sont 1 = gagné,0= perdu et 0.5 ")
+                    score2 = float(input("Score - Joueur 2: "))
+                    
                 self.tournament_controller.add_match_to_round(tournament_id,match_id,round_name, player_one, player_two, score1, score2)
                 
             elif choice == "8":
+                # Génération automatique des paires de matchs
+                tournament_id = input("Identifiant du tournoi: ")
+                while tournament_id == "":
+                    print("Vous devez impérativement fournir l'identifiant du tournoi")
+                    tournament_id = input("Identifiant du tournoi: ")
+                round_name = input("Nom du tour: ")
+                while round_name == "":
+                    print('Vous devez fournir un nom pour chaque tour')
+                    round_name = input("Nom du tour: ")
+                self.tournament_controller.generate_random_match(tournament_id, round_name)
+                
+            
+            elif choice == "9":
                 tournament_id = input("Identifiant du Tournoi: ")
                 match_id = input("Identifiant du match : ")                
                 player_one = input('Identifiant Joueur 1 :')
                 player_two = input('Identifiant Joueur 2 :')
-                score1= input('Score Joueur-1 :')
-                score2=input('Score Joueur-2 :')
+                score1 = float(input("Score - Joueur 1 : ")) 
+                while self.player_controller.valid_score(score1) != True :
+                    print("Erreur de saisie !!! - les résultats d'un match sont 1 = gagné,0= perdu et 0.5 ")
+                    score1 = float(input("Score - Joueur 1 : "))                    
+                score2 = float(input("Score - Joueur 2: "))
+                while self.player_controller.valid_score(score2) != True :
+                    print("Erreur de saisie !!! - les résultats d'un match sont 1 = gagné,0= perdu et 0.5 ")
+                    score2 = float(input("Score - Joueur 2: ")) 
+                while score1 + score2 > 1 :
+                    print('la somme des deux scores ne peut exceder 1')
+                    score1 = float(input("Score - Joueur 1 : "))  
+                    while self.player_controller.valid_score(score1) != True :
+                        print("Erreur de saisie !!! - les résultats d'un match sont 1 = gagné,0= perdu et 0.5 ")
+                        score1 = float(input("Score - Joueur 1 : "))                     
+                    score2 = float(input("Score - Joueur 2: "))
+                    while self.player_controller.valid_score(score2) != True :
+                        print("Erreur de saisie !!! - les résultats d'un match sont 1 = gagné,0= perdu et 0.5 ")
+                        score2 = float(input("Score - Joueur 2: "))
+                    
                 self.tournament_controller.update_match(tournament_id, match_id, player_one, player_two, score1, score2)
-            elif choice == "9":
+                self.tournament_controller.update_scores_after_match(tournament_id, match_id, score1, score2)
+            elif choice == "10":
                 break
             else:
                 print("Option invalide")
+                
+                
+    def report_menu(self):
+        while True:
+            print('------------------------------------')
+            print("\nMenu des rapports:")
+            print("1. Liste des Joueurs")
+            print("2. Liste des Tournois")
+            print("3. Détail tournoi")   
+            print("4. Quitter")              
+            choice = input("Choisissez une option: ")
+
+            
+            if choice == "1":
+                self.player_controller.list_players_alphabetically()            
+            elif choice == "2":
+                for tournament in self.tournament_controller.tournaments:
+                    #print(tournament.__dict__)
+                    print('------------------------------------')
+                    print('Nom du Tournoi: ',tournament.name)
+                    print('Identifiant du Tournoi: ',tournament.tournament_id)
+                    print('------------------------------------')
+            elif choice == "3":
+                tournament_id=input("Identifiant du Tournoi: ")
+                self.tournament_controller.display_tournament_details(tournament_id)
+            elif choice == "4":
+                break
+            else:
+                print("Option invalide.")
+                                      
+                    
+            
+            
+                
+                
 

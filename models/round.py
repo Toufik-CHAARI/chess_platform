@@ -4,8 +4,6 @@ from models.match import Match
 class Round:
     def __init__(self, name,start_time=None, end_time=None):
         self.name = name
-        #self.start_time="" 
-        #self.end_time =""
         self.start_time = start_time if start_time else datetime.now() 
         self.end_time = end_time
         self.matches = []  # list of Match objects
@@ -17,7 +15,6 @@ class Round:
         
     def get_match(self, match_id):
         for match in self.matches:
-            #if match.id == match_id:
             if match.match_id == match_id:       
                 return match
         return None
@@ -27,7 +24,6 @@ class Round:
     
     
     def to_dict(self):
-        #return self.__dict__
         return {
             'name': self.name,
             'start_time': self.start_time.strftime('%d-%m-%Y %H:%M:%S') if self.start_time else None,
@@ -39,18 +35,9 @@ class Round:
     def from_dict(source):
         print(source)
         round_obj = Round(source["name"])
-        #round_obj.start_time = source["start_time"]
-        #round_obj.end_time = source["end_time"]
         round_obj.start_time = datetime.strptime(source["start_time"], '%d-%m-%Y %H:%M:%S') if source["start_time"] else None
         round_obj.end_time = datetime.strptime(source["end_time"], '%d-%m-%Y %H:%M:%S') if source["end_time"] else None
         round_obj.matches = [Match.from_dict(match) for match in source["matches"]]
         return round_obj
     
-    '''def to_dict(self):
-        return {
-            'name': self.name,
-            'start_time': self.start_time,
-            'end_time': self.end_time,
-            'matches': [match.to_dict() for match in self.matches]  # assuming you also have to_dict in Match class
-        }'''
-        
+    

@@ -3,23 +3,26 @@ from models.tournament import Tournament
 from models.player import Player
 from datetime import datetime
 from models.round import Round
+
 from models.match import Match
 from controllers.players_controller import PlayerController
 import uuid
 import os
+import random
 
 
 class TournamentController:
     def __init__(self):
         self.tournaments = []        
         self.load_tournaments()
+        self.players_to_match = []
 
-    def create_tournament(self, tournament_id, name, location, start_date, end_date,description, num_rounds, current_round=0, players=None, rounds=None):
+    def create_tournament(self, tournament_id, name, location, start_date, end_date,description, num_rounds, current_round=0,rounds=None,past_pairs=None ):
                             
-        tournament = Tournament(tournament_id, name, location, start_date, end_date,description, num_rounds, current_round, players=[], rounds=[])
+        tournament = Tournament(tournament_id, name, location, start_date, end_date,description, num_rounds, current_round,rounds=[])
         self.tournaments.append(tournament)
         self.save_tournaments()
-        print("Tournament successfully created!")
+        print("Tournoi créé avec succès!")
 
     def list_tournaments(self):
         for tournament in self.tournaments:
@@ -31,7 +34,7 @@ class TournamentController:
         for tournament in self.tournaments:
             if tournament.tournament_id == tournament_id:
                 return tournament
-        print("Tournament not found!")
+        print("Tournoi inconnu!")
         return None
 
     def update_tournament(self, tournament_id):
@@ -44,45 +47,42 @@ class TournamentController:
             tournament.num_rounds = input("Saisir le nouveau nombre de Tours(appuyer sur entrer pour conserver le nombre actuel): ") or tournament.num_rounds
             tournament.description = input("Saisir une nouvelle description (appuyer sur entrer pour conserver la description actuelle): ") or tournament.description
             self.save_tournaments()
-            print("Tournament successfully updated!")
+            print("Tournoi modifié avec succès !")
 
     def delete_tournament(self, tournament_id):
         tournament = self.get_tournament(tournament_id)
         if tournament:
             self.tournaments.remove(tournament)
             self.save_tournaments()
-            print("Tournament successfully deleted!")
+            print("Tournoi supprimé avec succes")
 
     def load_tournaments(self):
         try:
             with open('data/tournaments.json', 'r') as file:
                 tournaments_data = json.load(file)
-                self.tournaments = [Tournament.from_dict(tournament) for tournament in tournaments_data]
-                #self.tournaments = [Tournament(**data) for data in tournaments_data]
+                self.tournaments = [Tournament.from_dict(tournament) for tournament in tournaments_data]            
         except json.JSONDecodeError as e:
             print(f"Error decoding JSON: {e}")
             self.tournaments = []
         
-    def start_round(self, tournament_id, round_name):
+    def start_round(self, tournament_id):
         tournament = self.get_tournament(tournament_id)
         if tournament:
             if tournament.current_round >= tournament.num_rounds:
                 print("Impossible de créér un nouveau tour, vous avez atteint le maximum de tour pour ce tournoi.")
             else:
+                round_name = f"ROUND {tournament.current_round + 1}"
                 tournament.add_round(round_name)
                 self.save_tournaments()
                 print("Nouveau Tour créé avec succès!")
-        '''if tournament:
-            tournament.add_round(round_name)
-            self.save_tournaments()
-            print("Round successfully created!")'''
+        
    
     def add_match_to_round(self,tournament_id,match_id, round_name, player_one, player_two,score1, score2):
         tournament = self.get_tournament(tournament_id)
         if tournament:
-            match_id= match_id if match_id else str(uuid.uuid4())
+            match_id = match_id if match_id else str(uuid.uuid4())
             match = Match(match_id, player_one, player_two, score1, score2)
-            #variable player_one and two contains chess_id
+            #Important !!! variable player_one and player_two contains chess_id
             match.set_scores(score1,score2)
             tournament.add_match_to_round(round_name, match)            
             player_controller = PlayerController()
@@ -95,8 +95,7 @@ class TournamentController:
     
     def update_match(self, tournament_id, match_id, player_one=None, player_two=None, score1=None, score2=None):
         tournament = self.get_tournament(tournament_id)
-        if tournament:
-            # Find the match across all rounds
+        if tournament:            
             for round_ in tournament.rounds:
                 match = round_.get_match(match_id)
                 if match:
@@ -122,43 +121,123 @@ class TournamentController:
             current_round.end_time = datetime.now()
             self.save_tournaments()
             print(f"Le Tour {tournament.current_round} est terminé!")
-            
+        else:
+            print('Identifiant du Tournoi érroné')            
     
-               
-            
-            
-
     def save_tournaments(self):
         with open('data/tournaments.json', 'w') as file:
             json.dump([tournament.to_dict() for tournament in self.tournaments], file)
             
-'''
-class PlayerController:
-    def __init__(self):
-        self.players = []
-        self.load_players()
+    
+    
+    #v2
+    def update_players_to_match(self,tournament):
+        current_scores = tournament.get_current_scores()        
+        controller = PlayerController()
+        controller.load_players()       
+        #self.players_to_match = sorted(controller.players, key=lambda player: current_scores.get(player.chess_id, 0), reverse=True)
         
-    def load_players(self):
-            if os.path.isfile("data/players.json"):
-                with open("data/players.json", "r") as file:
-                    player_list = json.load(file)
-                    for player_dict in player_list:
-                        player = Player(**player_dict)
-                        self.players.append(player)
-                        
-    def save_players(self):
-            player_list = [player.to_dict() for player in self.players]
-            with open("data/players.json", "w") as file:
-                json.dump(player_list, file)
+        # Here we use random.random() as a second sorting key, so that players with the same score are sorted randomly.
+        self.players_to_match = sorted(controller.players, key=lambda player: (current_scores.get(player.chess_id, 0), random.random()), reverse=True)
+        print(current_scores)
+            
+    def generate_random_match(self, tournament_id, round_name):
+        tournament = self.get_tournament(tournament_id)
+        if not tournament:
+            return f"Aucun Tournoi ne correspond à l'identifiant: {tournament_id}"
+        player_one = None
+        player_two = None
+        if tournament.current_round == 1:
+            self.update_players_to_match(tournament)
+            player_one, player_two = random.sample(self.players_to_match, 2)
+            self.players_to_match.remove(player_one)  # Remove player_one from the list
+            self.players_to_match.remove(player_two)  # Remove player_two from the list
+            tournament.past_pairs.add((player_one.chess_id, player_two.chess_id))
+            #self.update_players_to_match(tournament)
+            #player_one, player_two = random.sample(self.players_to_match, 2)
+            #tournament.past_pairs.add((player_one.chess_id, player_two.chess_id))
+        else:
+            if not self.players_to_match:
+                self.update_players_to_match(tournament)
+            player_one = self.players_to_match.pop(0)
+            for potential_player_two in self.players_to_match[:]:  # Use a copy of the list to avoid problems
+                if (player_one.chess_id, potential_player_two.chess_id) not in tournament.past_pairs and (potential_player_two.chess_id, player_one.chess_id) not in tournament.past_pairs:
+                    tournament.past_pairs.add((player_one.chess_id, potential_player_two.chess_id))
+                    self.players_to_match.remove(potential_player_two)  # Use remove() method instead of pop()
+                    player_two = potential_player_two
+                    break
+            if not player_two:
+                return "Unable to find a valid player_two"
+        match_id = str(uuid.uuid4())
+        match = Match(match_id, player_one.chess_id, player_two.chess_id, 0, 0)
+        tournament.add_match_to_round(round_name, match)
+        self.save_tournaments()
+        return "Génération de la paire de joueur effectuée avec succès !!!"
+        
+              
+    
+    def display_tournament_details(self, tournament_id):
+        # Get the tournament
+        tournament = self.get_tournament(tournament_id)
+        if not tournament:
+            print("Aucun tournoi ne correspond à cet identifiant.")
+            return
 
-    def update_player_score(self, player_id, new_score):
-            # Find the player
-            player = self.get_player(player_id)
-            if player:
-                # Update the player's score
-                player.score += new_score  # Assuming 'score' attribute exists in Player
+        # Display name and dates of the tournament
+        print("Nom du tournoi:", tournament.name)
+        print("Dates du tournoi: Du", tournament.start_date, "au", tournament.end_date)
 
-                self.save_players()  # Save players data to file
-                
-                
-'''
+        # Display the list of players in alphabetical order.
+        players_controller = PlayerController()
+        players_controller.load_players()
+
+        # Get the list of the players who participate to the tournament.
+        tournament_players_ids = {match.player1 for round in tournament.rounds for match in round.matches}
+        tournament_players_ids.update({match.player2 for round in tournament.rounds for match in round.matches})
+        
+        tournament_players = [player for player in players_controller.players if player.chess_id in tournament_players_ids]
+        # Sorted Alphabetically
+        tournament_players.sort(key=lambda player: (player.last_name, player.first_name))
+
+        print("Liste des Joueurs:")
+        for player in tournament_players:
+            print("-", player.last_name, player.first_name, player.chess_id)
+
+        # Display the list of all the rounds and all the matches
+        print("Tours:")
+        for round in tournament.rounds:
+            print(round.name)
+            for match in round.matches:
+                # Get the Player objects corresponding based player id's which are chess_id
+                player1 = players_controller.get_player(match.player1)
+                player2 = players_controller.get_player(match.player2)
+                # Vérifier si les joueurs existent
+                if not player1 or not player2:
+                    print(f"Les joueurs {match.player1} et/ou {match.player2} n'existent pas.")
+                    continue
+                print(f"  Match: {player1.first_name} {player1.last_name} (ID: {player1.chess_id}) contre {player2.first_name} {player2.last_name} (ID: {player2.chess_id}), Score: {match.score1} - {match.score2}")
+
+        
+    
+           
+    
+
+
+    def update_scores_after_match(self, tournament_id, match_id, score1, score2):
+        tournament = self.get_tournament(tournament_id)
+        if tournament:
+            # Get the match across all rounds
+            for round_ in tournament.rounds:
+                match = round_.get_match(match_id)
+                if match:
+                    player_controller = PlayerController()
+                    # update the players' scores
+                    player_controller.update_player_score_by_chess_id(match.player1, score1)
+                    player_controller.update_player_score_by_chess_id(match.player2, score2)
+                    player_controller.rank_players()
+                    self.save_tournaments()
+                    print("Scores enregistrés avec succès!")
+                    return
+            print("Identifiant de match érronné!")
+        else:
+            print("Tournoi inconnu!")

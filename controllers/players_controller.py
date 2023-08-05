@@ -30,8 +30,7 @@ class PlayerController:
     def get_player(self, chess_id):
         for player in self.players:
             if player.chess_id == chess_id:
-                return player
-            
+                return player            
         return None
 
     def update_player(self, chess_id, first_name=None, last_name=None, birth_date=None):
@@ -64,10 +63,7 @@ class PlayerController:
             try:
                 with open("data/players.json", "r") as file:
                     player_list = json.load(file)
-                    self.players = [Player.from_dict(player) for player in player_list]
-                   # for player_dict in player_list:
-                        #player = Player(**player_dict)
-                        #self.players.append(player)
+                    self.players = [Player.from_dict(player) for player in player_list]                   
             except (FileNotFoundError, json.JSONDecodeError):
                 self.players = []
             
@@ -83,7 +79,12 @@ class PlayerController:
                 player.score += new_score
                 self.save_players()  # Save players data to file
                 return
+            
+                
         print(f"Player with chess_id {chess_id} not found.")
+        
+        
+    
         
     def rank_players(self):
         # Sort players in descending order by score
@@ -92,4 +93,24 @@ class PlayerController:
         for i, player in enumerate(sorted_players, start=1):
             player.ranking = i
         self.save_players()  # Save players data to file
+        
+    def valid_score(self,score):
+        if score in [0, 0.5, 1]:
+            return True
+        else:
+            return False
 
+
+    def valid_score_int(self, score):
+        try:
+            # Try to convert the input to an integer
+            float(score)
+            return True
+        except ValueError:
+            # If a ValueError is raised, the input is not an integer
+            return False
+        
+    def list_players_alphabetically(self):
+        sorted_players = sorted(self.players, key=lambda player: player.first_name)
+        for player in sorted_players:
+            print(f'Chess ID: {player.chess_id}, Prénom: {player.first_name},Nom: {player.last_name}, Score: {player.score}')
