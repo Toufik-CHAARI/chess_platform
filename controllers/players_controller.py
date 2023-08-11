@@ -1,4 +1,5 @@
 from models.player import Player
+from datetime import datetime
 import json
 import re
 
@@ -33,6 +34,124 @@ class PlayerController:
         print(
             f"le nouveau joueur '{player.first_name}' a été enregistré"
         )
+
+    def main_menu(self):
+        """
+        This function displays the main menu options.
+        This function doesn't take any arguments and doesn't return anything.
+        """
+        print("\n Menu Principal:")
+        print("1. Gérer les joueurs")
+        print("2. Gérer les tournois")
+        print("3. Accéder aux rapports")
+        print("4. Quitter")
+
+    def player_menu(self):
+        """
+        This function displays the player menu options.
+        This function doesn't take any arguments and doesn't return anything.
+        """
+        print("------------------------------------")
+        print("\nMenu Joueur:")
+        print("1. Ajouter un joueur")
+        print("2. Mettre à jour un joueur")
+        print("3. Supprimer un joueur")
+        print("4. Lister les joueurs")
+        print("5. Revenir au menu principal")
+
+    def add_player_wrapper(self):
+        """
+        Wrapper function for adding a player.
+        This function guides the user through the process of adding
+        a new player.This function doesn't take any arguments
+        and doesn't return anything.
+        """
+        first_name = self.get_non_empty_input(
+            "Prénom: ",
+            "Vous devez impérativement fournir prénom !!!",
+        )
+        last_name = self.get_non_empty_input(
+            "Nom: ",
+            "Vous devez impérativement fournir un nom de famille !!!",
+        )
+        birth_date = self.get_date("Date de naissance (JJ-MM-AAAA): ")
+        chess_id = self.validate_chess_id(
+            "Identifiant national d’échecs: "
+        )
+        self.add_player(first_name, last_name, birth_date, chess_id)
+
+    def update_player_wrapper(self):
+        """
+        Wrapper function for updating a player details.
+        This function guides the user through the process of updating a player
+        This function doesn't take any arguments and doesn't return anything.
+        """
+        chess_id = self.get_chess_id(
+            "Identification National d échecs : "
+        )
+        first_name = input(
+            "Nouveau prénom (laissez vide pour ne pas changer): "
+        )
+        last_name = input(
+            "Nouveau nom de famille (laissez vide "
+            "pour ne pas changer): "
+        )
+        birth_date = self.get_date(
+            "Nouvelle Date de naissance (JJ-MM-AAAA): "
+        )
+        self.update_player(chess_id, first_name, last_name, birth_date)
+
+    def delete_player_wrapper(self):
+        """
+        Wrapper function for deleting a player .
+        This function guides the user through the process of deleting a player
+        This function doesn't take any arguments and doesn't return anything.
+        """
+        chess_id = self.get_chess_id(
+            "Identification National d échecs - Joueur 2: "
+        )
+        self.delete_player(chess_id)
+
+    def list_players_wrapper(self):
+        """
+        Wrapper function for displaying player's attributes .
+        This function displays all player's attributes
+        This function doesn't take any arguments and doesn't return anything.
+        """
+        for player in self.players:
+            print("------------------------------------")
+            print(
+                "Identifiant National d'échecs: ",
+                player.chess_id,
+            )
+            print("Prénom: ", player.first_name)
+            print("Nom: ", player.last_name)
+            print(
+                "Date de naissance: ",
+                player.birth_date.strftime("%d-%m-%Y"),
+            )
+            print("Score: ", player.score)
+            print("Ranking: ", player.ranking)
+            print("------------------------------------")
+
+    def get_date(self, prompt):
+        """
+        this function takes a prompt as input and allows the user
+        to input a date in the format "DD-MM-YYYY". It converts
+        the input string into a Python datetime object. If the user
+        provides an invalid date format, he is asked to re-enter
+        in the correct format.
+        """
+        while True:
+            date_str = input(prompt)
+            try:
+                date_obj = datetime.strptime(date_str, "%d-%m-%Y")
+                return date_obj
+            except ValueError:
+                print(
+                    "Vous devez renseigner la date de la façon "
+                    "suivante: JOUR-MOIS-ANNEE (avec traits d'union) "
+                )
 
     def get_non_empty_input(self, prompt, error_message):
         """

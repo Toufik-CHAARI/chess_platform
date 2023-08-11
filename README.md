@@ -68,6 +68,13 @@ python3 main.py
 ***
 ## PEP8 Code compliance Report
 
+## In order to generate each report, please use the following commands :
+
+## flake8 --format=html --htmldir=flake-report_models models
+## flake8 --format=html --htmldir=flake-report_views views  
+## flake8 --format=html --htmldir=flake-report_controllers controllers
+## flake8 --format=html --htmldir=flake-report_main main.py  
+
 ### display the report via the html file in the folder flake-report
 
 

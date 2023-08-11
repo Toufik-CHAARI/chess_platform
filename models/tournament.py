@@ -90,8 +90,8 @@ class Tournament:
             "tournament_id": self.tournament_id,
             "name": self.name,
             "location": self.location,
-            "start_date": self.start_date.strftime("%d%m%Y"),
-            "end_date": self.end_date.strftime("%d%m%Y"),
+            "start_date": self.start_date.strftime("%d-%m-%Y"),
+            "end_date": self.end_date.strftime("%d-%m-%Y"),
             "description": self.description,
             "current_round": self.current_round,
             "past_pairs": [list(pair) for pair in self.past_pairs],
@@ -136,8 +136,8 @@ class Tournament:
             source["name"],
             source["location"],
             # source["start_date"],
-            datetime.strptime(source["start_date"], "%d%m%Y"),
-            datetime.strptime(source["end_date"], "%d%m%Y"),
+            datetime.strptime(source["start_date"], "%d-%m-%Y"),
+            datetime.strptime(source["end_date"], "%d-%m-%Y"),
             # source["end_date"],
             source["description"],
             source.get("num_rounds", 4),
@@ -171,3 +171,4 @@ class Tournament:
                     current_scores.get(match.player2, 0) + match.score2
                 )
         return current_scores
+        print(current_scores)

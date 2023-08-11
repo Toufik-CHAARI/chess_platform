@@ -12,6 +12,7 @@ class TournamentController:
         self.tournaments = []
         self.load_tournaments()
         self.players_to_match = []
+        self.player_controller = PlayerController()
 
     def create_tournament(
         self,
@@ -41,6 +42,336 @@ class TournamentController:
         self.tournaments.append(tournament)
         self.save_tournaments()
         print("Tournoi créé avec succès!")
+
+    def tournament_menu(self):
+        """
+        This function displays the tournament menu options.
+        This function doesn't take any arguments and doesn't
+        return anything.
+        """
+        print("------------------------------------")
+        print("\nMenu des tournois:")
+        print("1. Créer un tournoi")
+        print("2. Afficher les tournois")
+        print("3. Modifier un tournoi")
+        print("4. Supprimer un tournoi")
+        print("5. Démarrez un tour dans un tournoi")
+        print("6. Finir un tour en cours")
+        print("7. Ajout manuel d'un match au tour d'un tournoi")
+        print("8. Generation automatique de match")
+        print("9. Modifier / Enregistrer le resultat d'un match")
+        print("10. Revenir au menu principal")
+
+    def add_tournament_wrapper(self):
+        """
+        Wrapper function for adding a tournament.
+        This function guides the user through the process of adding
+        a new tournament.This function doesn't take any arguments
+        and doesn't return anything.
+        """
+        tournament_id = input(
+            "Identifiant du tournoi(généré automatiquement si vide): "
+        )
+        name = self.get_non_empty_input(
+            "Nom du tournoi: ",
+            "Vous devez fournir un nom de tournoi",
+        )
+        location = self.get_non_empty_input(
+            "Lieu du tournoi: ",
+            "Vous devez renseigner le lieu du tournoi",
+        )
+        start_date = self.get_date("Date de début (JJ-MM-AAAA): ")
+        end_date = self.get_date("Date de fin (JJ-MM-AAAA): ")
+        description = input("Description: ")
+        num_rounds = input(
+            "Nombre de rounds (par défaut 4 si champs vide): "
+        )
+        if num_rounds == "":
+            num_rounds = 4
+        else:
+            num_rounds = int(num_rounds)
+        self.create_tournament(
+            tournament_id,
+            name,
+            location,
+            start_date,
+            end_date,
+            description,
+            num_rounds,
+        )
+
+    def tournament_list_wrapper(self):
+        """
+        Wrapper function for displaying a tournament as well as
+        rounds and matches.This function doesn't take any
+        arguments and doesn't return anything.
+        """
+        for tournament in self.tournaments:
+            # print(tournament.__dict__)
+            print("------------------------------------")
+            print("Nom du Tournoi: ", tournament.name)
+            print(
+                "Identifiant du Tournoi: ",
+                tournament.tournament_id,
+            )
+            print("Lieu du Tournoi: ", tournament.location)
+            print(
+                "Date de début: ",
+                tournament.start_date.strftime("%d-%m-%Y"),
+            )
+            print(
+                "Date de fin: ",
+                tournament.end_date.strftime("%d-%m-%Y"),
+            )
+            print("Description: ", tournament.description)
+            print("Nombre de Tour: ", tournament.num_rounds)
+            print("Tour actuel: ", tournament.current_round)
+            if tournament.rounds:
+                for round in tournament.rounds:
+                    print("------------------------------------")
+                    print(f"Nom du Tour: {round.name}")
+                    print(
+                        "Date et heure de début :",
+                        round.start_time,
+                    )
+                    print("Date et heure de fin :", round.end_time)
+                    print("Matches:")
+                    for match in round.matches:
+                        print(
+                            "Identifiant du match :",
+                            match.match_id,
+                        )
+                        print(
+                            "Identifiant Joueur 1 :",
+                            match.player1,
+                        )
+                        print(
+                            "Identifiant Joueur 2 :",
+                            match.player2,
+                        )
+                        print("Score Joueur-1 :", match.score1)
+                        print("Score Joueur-2 :", match.score2)
+
+            print("------------------------------------")
+
+    def update_tournament_wrapper(self):
+        """
+        Wrapper function for updating a tournament.
+        This function guides the user through the process
+        of updating a new tournament.This function doesn't
+        take any arguments and doesn't return anything.
+        """
+        tournament_id = input(
+            "Renseigner l'identifiant du tournoi "
+            "pour modifier un tournoi: "
+        )
+        name = input(" Nom du Tournoi (Meme nom si champs vide): ")
+        location = input(
+            " Localisation du Tournoi "
+            "(Meme localisation si champs vide): "
+        )
+        start_date = self.get_date("Date de début (JJ-MM-AAAA): ")
+        end_date = self.get_date("Date de fin (JJ-MM-AAAA): ")
+        description = input("Description (mem description si vide): ")
+        num_rounds = input(
+            "Nombre de rounds (par défaut 4 si champs vide): "
+        )
+        if num_rounds == "":
+            num_rounds = 4
+        else:
+            num_rounds = int(num_rounds)
+
+        self.update_tournament(
+            tournament_id,
+            name,
+            location,
+            start_date,
+            end_date,
+            num_rounds,
+            description,
+        )
+
+    def delete_tournament_wrapper(self):
+        """
+        Wrapper function for deleting a tournament.
+        This function guides the user through the process
+        of deleting an existing tournament.This function doesn't
+        take any arguments and doesn't return anything.
+        """
+        tournament_id = self.get_non_empty_input(
+            "Renseigner l'identifiant du tournoi à supprimer: ",
+            "Vous devez impérativement fournir un identifiant",
+        )
+        self.delete_tournament(tournament_id)
+
+    def start_round_wrapper(self):
+        """
+        Wrapper function for starting a new round.
+        This function guides the user through the process
+        of starting a new round.This function doesn't
+        take any arguments and doesn't return anything.
+        """
+        tournament_id = self.get_non_empty_input(
+            "Identifiant du tournoi: ",
+            "Vous devez imperativement fournir l'identifiant "
+            "du tournoi",
+        )
+        self.start_round(tournament_id)
+
+    def end_round_wrapper(self):
+        """
+        Wrapper function for ending an existing round.
+        This function guides the user through the process
+        of ending an existing round.This function doesn't
+        take any arguments and doesn't return anything.
+        """
+        tournament_id = self.get_non_empty_input(
+            "Fournir l'identifiant du tournoi pour mettre "
+            "fin au tour: ",
+            "Vous devez imperativement fournir l'identifiant "
+            "du tournoi",
+        )
+        round_name = self.get_non_empty_input(
+            "Nom du tour:  ",
+            "Vous devez imperativement renseigner le nom du tour",
+        )
+        self.end_round(tournament_id, round_name)
+
+    def add_match_to_round_wrapper(self):
+        """
+        Wrapper function for manually adding a match to a round.
+        This function guides the user through the process
+        of manually adding a match to an existing round.This
+        function doesn't take any arguments and doesn't return anything.
+        """
+
+        tournament_id = self.get_non_empty_input(
+            "Identifiant du tournoi: ",
+            "Vous devez imperativement fournir "
+            "l'identifiant du tournoi",
+        )
+        match_id = input(
+            "Identifiant du match (généré automatiquement si vide): "
+        )
+        round_name = self.get_non_empty_input(
+            "Nom du tour:  ",
+            "Vous devez imperativement renseigner le nom du tour",
+        )
+
+        player_one = self.player_controller.get_chess_id(
+            "Identification National d échecs - Joueur 1: "
+        )
+        player_two = self.player_controller.get_chess_id(
+            "Identification National d échecs - Joueur 2: "
+        )
+        score1 = self.get_score("Score - Joueur 1 : ")
+        score2 = self.get_score("Score - Joueur 2: ")
+        while score1 + score2 > 1:
+            print("la somme des deux scores ne peut exceder 1")
+            score1 = self.get_score("Score - Joueur 1 : ")
+            score2 = self.get_score("Score - Joueur 2: ")
+        self.add_match_to_round(
+            tournament_id,
+            match_id,
+            round_name,
+            player_one,
+            player_two,
+            score1,
+            score2,
+        )
+
+    def automatic_match_wrapper(self):
+        """
+        Wrapper function for automatically adding a match to a round.
+        This function guides the user through the process
+        of automatically adding a match to an existing round.This
+        function doesn't take any arguments and doesn't return anything.
+        """
+        tournament_id = self.get_non_empty_input(
+            "Identifiant du tournoi: ",
+            "Vous devez imperativement fournir "
+            "l'identifiant du tournoi",
+        )
+        round_name = self.get_non_empty_input(
+            "Nom du tour:  ",
+            "Vous devez imperativement renseigner le nom du tour",
+        )
+        self.generate_match_automatic(tournament_id, round_name)
+
+    def update_match_wrapper(self):
+        """
+        Wrapper function for updating a match.
+        This function guides the user through the process
+        of updating a match.This function doesn't take any
+        arguments and doesn't return anything.
+        """
+        tournament_id = self.get_non_empty_input(
+            "Identifiant du tournoi: ",
+            "Vous devez imperativement fournir l'identifiant "
+            "du tournoi",
+        )
+        match_id = input("Identifiant du match : ")
+        player_one = self.player_controller.get_chess_id(
+            "Identification National d échecs - Joueur 1: "
+        )
+        player_two = self.player_controller.get_chess_id(
+            "Identification National d échecs - Joueur 2: "
+        )
+        score1 = self.get_score("Score - Joueur 1 : ")
+        score2 = self.get_score("Score - Joueur 2: ")
+        while score1 + score2 > 1:
+            print("la somme des deux scores ne peut exceder 1")
+            score1 = self.get_score("Score - Joueur 1 : ")
+            score2 = self.get_score("Score - Joueur 2: ")
+        self.update_match(
+            tournament_id,
+            match_id,
+            player_one,
+            player_two,
+            score1,
+            score2,
+        )
+        self.update_scores_after_match(
+            tournament_id, match_id, score1, score2
+        )
+
+    def report_menu(self):
+        """
+        This function displays the report menu options.
+        This function doesn't take any arguments and doesn't
+        return anything.
+        """
+        print("------------------------------------")
+        print("\nMenu des rapports:")
+        print("1. Liste des Joueurs")
+        print("2. Liste des Tournois")
+        print("3. Détail tournoi")
+        print("4. Revenir au menu principal")
+
+    def short_tournament_list_wrapper(self):
+        """
+        Wrapper function for displaying tournament name and
+        tournament id.This function doesn't take any arguments
+        and doesn't return anything.
+        """
+        for tournament in self.tournaments:
+            print("------------------------------------")
+            print("Nom du Tournoi: ", tournament.name)
+            print(
+                "Identifiant du Tournoi: ",
+                tournament.tournament_id,
+            )
+            print("------------------------------------")
+
+    def tournament_details_wrapper(self):
+        """
+        Wrapper function for displaying all the attributes of
+        tournaments including rounds and matches details .
+        This function doesn't take any arguments and
+        doesn't return anything.
+        """
+        tournament_id = input("Identifiant du Tournoi: ")
+        self.display_tournament_details(tournament_id)
 
     def get_tournament(self, tournament_id):
         """
@@ -287,7 +618,6 @@ class TournamentController:
             ),
             reverse=True,
         )
-        print(current_scores)
 
     def generate_match_automatic(self, tournament_id, round_name):
         """
@@ -361,7 +691,7 @@ class TournamentController:
         )
         tournament.add_match_to_round(round_name, match)
         self.save_tournaments()
-        return (
+        print(
             "Génération de la paire de joueur effectuée avec succès !!!"
         )
 
@@ -518,12 +848,12 @@ class TournamentController:
         while True:
             date_str = input(prompt)
             try:
-                date_obj = datetime.strptime(date_str, "%d%m%Y")
+                date_obj = datetime.strptime(date_str, "%d-%m-%Y")
                 return date_obj
             except ValueError:
                 print(
                     "Vous devez renseigner la date de la façon "
-                    "suivante: JOUR MOIS ANNEE (sans traits d'union) "
+                    "suivante: JOUR MOIS ANNEE (avec traits d'union) "
                 )
 
     def get_non_empty_input(self, prompt, error_message):

@@ -36,7 +36,7 @@ class Player:
         player = Player(
             source["first_name"],
             source["last_name"],
-            datetime.strptime(source["birth_date"], "%d%m%Y"),
+            datetime.strptime(source["birth_date"], "%d-%m-%Y"),
             source["chess_id"],
             source["ranking"],
             source["score"],
@@ -55,7 +55,7 @@ class Player:
         return {
             "first_name": self.first_name,
             "last_name": self.last_name,
-            "birth_date": self.birth_date.strftime("%d%m%Y"),
+            "birth_date": self.birth_date.strftime("%d-%m-%Y"),
             "chess_id": self.chess_id,
             "ranking": self.ranking,
             "score": self.score,
